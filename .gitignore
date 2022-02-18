@@ -7,3 +7,4 @@ addresses.txt
 #Hardhat files
 cache
 artifacts
+hardhat.config.js
