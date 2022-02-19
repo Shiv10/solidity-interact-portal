@@ -6,8 +6,10 @@ import "hardhat/console.sol";
 
 contract WavePortal {
     uint256 totalJokes;
+    uint256 private seed;
 
     event newJoke(address indexed from, uint256 timestamp, string message);
+    mapping (address => uint256) public lastWavedAt;
 
     struct Joke{
         address joker;
@@ -17,15 +19,32 @@ contract WavePortal {
 
     Joke[] jokes;
 
-    constructor() {
+    constructor() payable {
         console.log("Hey this is my first smart contract!!");
+        seed = (block.difficulty + block.timestamp) % 100;
+        console.log("random seed: ",seed);
     }
 
     function joke(string memory _message) public {
+
+        require(lastWavedAt[msg.sender]+15 minutes < block.timestamp, "Wait 15 minutes");
+
         totalJokes += 1; 
         console.log("%s has cracked a joke", msg.sender);
 
+        seed = (block.difficulty + block.timestamp + seed) % 100;
+
         jokes.push(Joke(msg.sender, _message, block.timestamp));
+
+        if(seed<10){
+            uint256 prize = 0.000001 ether;
+            require(
+                prize <= address(this).balance,
+                "Trying to withdraw the ether form the contract"
+            );
+            (bool success, ) = (msg.sender).call{value: prize}("");
+            require(success, "Failed to withdraw moeny from contract");
+        }
 
         emit newJoke(msg.sender, block.timestamp, _message);
     }
